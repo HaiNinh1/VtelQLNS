@@ -1,0 +1,377 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Viettel Red Theme */
+:root {
+  --viettel-red: #E60012;
+  --viettel-red-dark: #C00010;
+  --viettel-red-light: #FF1A2E;
+  --viettel-gray: #F5F5F5;
+  --viettel-border: #E0E0E0;
+}
+
+.btn-viettel {
+  background-color: var(--viettel-red);
+  border-color: var(--viettel-red);
+  color: white;
+  border-radius: 20px;
+  padding: 8px 24px;
+  font-weight: 500;
+}
+
+.btn-viettel:hover {
+  background-color: var(--viettel-red-dark);
+  border-color: var(--viettel-red-dark);
+  color: white;
+}
+
+.text-viettel {
+  color: var(--viettel-red);
+}
+
+.bg-viettel {
+  background-color: var(--viettel-red) !important;
+}
+
+/* Status Badges */
+.badge-active {
+  background-color: #28a745;
+}
+
+.badge-expired {
+  background-color: #dc3545;
+}
+
+.badge-expiring {
+  background-color: #ffc107;
+  color: #000;
+}
+
+/* Table Styles - Viettel VTK Style */
+.table {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table thead th {
+  background-color: #FAFAFA;
+  border-bottom: 2px solid var(--viettel-border);
+  color: #333;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 12px 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table tbody td {
+  padding: 14px 16px;
+  vertical-align: middle;
+  border-bottom: 1px solid #F0F0F0;
+  color: #555;
+  font-size: 14px;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #FAFAFA;
+}
+
+/* Sidebar - Viettel Style */
+.sidebar {
+  min-height: 100vh;
+  background-color: #FFFFFF;
+  border-right: 1px solid var(--viettel-border);
+  box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+}
+
+.sidebar .logo-container {
+  padding: 20px;
+  border-bottom: 1px solid var(--viettel-border);
+  background: white;
+}
+
+.sidebar .nav-link {
+  color: #666;
+  padding: 14px 24px;
+  border-radius: 0;
+  transition: all 0.3s;
+  font-size: 14px;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  margin: 2px 0;
+}
+
+.sidebar .nav-link:hover {
+  background-color: #FAFAFA;
+  color: var(--viettel-red);
+  border-left-color: var(--viettel-red);
+}
+
+.sidebar .nav-link.active {
+  background-color: #FFF5F5;
+  color: var(--viettel-red);
+  border-left-color: var(--viettel-red);
+}
+
+.sidebar .nav-link svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Card Styles */
+.card {
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border-radius: 8px;
+  background: white;
+  margin-bottom: 24px;
+}
+
+.card-header {
+  background-color: white;
+  border-bottom: 1px solid var(--viettel-border);
+  font-weight: 600;
+  padding: 16px 24px;
+  font-size: 16px;
+  color: #333;
+}
+
+.card-body {
+  padding: 24px;
+}
+
+/* Form Styles - Viettel VTK Style */
+.form-label {
+  font-weight: 500;
+  color: #333;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.form-control, .form-select {
+  border: 1px solid #D9D9D9;
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--viettel-red);
+  box-shadow: 0 0 0 3px rgba(230, 0, 18, 0.1);
+}
+
+/* Filter Bar */
+.filter-bar {
+  background: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.filter-bar .form-control,
+.filter-bar .form-select {
+  border-radius: 20px;
+  font-size: 13px;
+  padding: 8px 16px;
+}
+
+.filter-bar .btn {
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: 13px;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 4px;
+  font-weight: 500;
+  padding: 8px 16px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn-outline-primary {
+  color: #1890FF;
+  border-color: #1890FF;
+}
+
+.btn-outline-primary:hover {
+  background-color: #1890FF;
+  border-color: #1890FF;
+}
+
+.btn-outline-danger {
+  color: var(--viettel-red);
+  border-color: var(--viettel-red);
+}
+
+.btn-outline-danger:hover {
+  background-color: var(--viettel-red);
+  border-color: var(--viettel-red);
+}
+
+.btn-outline-info {
+  color: #00BCD4;
+  border-color: #00BCD4;
+}
+
+.btn-outline-info:hover {
+  background-color: #00BCD4;
+  border-color: #00BCD4;
+}
+
+/* Badge Styles */
+.badge {
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* Pagination */
+.pagination {
+  margin-top: 20px;
+}
+
+.page-link {
+  color: #666;
+  border: 1px solid #D9D9D9;
+  padding: 8px 12px;
+  margin: 0 2px;
+  border-radius: 4px;
+}
+
+.page-link:hover {
+  background-color: #FAFAFA;
+  border-color: var(--viettel-red);
+  color: var(--viettel-red);
+}
+
+.page-item.active .page-link {
+  background-color: var(--viettel-red);
+  border-color: var(--viettel-red);
+}
+
+/* Loading Spinner */
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+/* Tabs */
+.nav-tabs {
+  border-bottom: 2px solid var(--viettel-border);
+}
+
+.nav-tabs .nav-link {
+  color: #666;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px 24px;
+  font-weight: 500;
+}
+
+.nav-tabs .nav-link:hover {
+  color: var(--viettel-red);
+  border-bottom-color: transparent;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--viettel-red);
+  background: none;
+  border-bottom-color: var(--viettel-red);
+}
+
+/* Alert */
+.alert {
+  border-radius: 8px;
+  border: none;
+  padding: 12px 16px;
+}
+
+/* Modal */
+.modal-header {
+  border-bottom: 1px solid var(--viettel-border);
+  padding: 16px 24px;
+}
+
+.modal-title {
+  font-weight: 600;
+  color: #333;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--viettel-border);
+  padding: 16px 24px;
+}
+
+/* Employee Detail Page */
+.info-table {
+  width: 100%;
+}
+
+.info-table td {
+  padding: 10px 0;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.info-table td:first-child {
+  color: #666;
+  font-weight: 500;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  background: none;
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+.breadcrumb-item {
+  font-size: 13px;
+  color: #666;
+}
+
+.breadcrumb-item.active {
+  color: var(--viettel-red);
+}
+
+/* Search Input */
+.search-input {
+  position: relative;
+}
+
+.search-input input {
+  padding-left: 36px;
+}
+
+.search-input svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+}
