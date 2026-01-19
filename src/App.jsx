@@ -15,7 +15,7 @@ import './App.css';
 function App() {
   return (
     <AuthProvider>
-      <Router basename="/VtelQLNS">
+      <Router>
         <Routes>
           {/* Public route */}
           <Route path="/login" element={<Login />} />
