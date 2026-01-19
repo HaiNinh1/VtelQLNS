@@ -2,11 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/VtelQLNS/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>nhansufrontend</title>
-    <script type="module" crossorigin src="/assets/index-Crj5LB6w.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Dz1oczNR.css">
+    <title>Quản Lý Nhân Sự - Viettel</title>
+    
+    <!-- GitHub Pages SPA routing script -->
+    <script>
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) { 
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/VtelQLNS/assets/index-CmCkmF2v.js"></script>
+    <link rel="stylesheet" crossorigin href="/VtelQLNS/assets/index-Dg6RpB17.css">
   </head>
   <body>
     <div id="root"></div>
