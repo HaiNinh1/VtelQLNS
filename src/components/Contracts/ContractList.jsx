@@ -9,6 +9,12 @@ import 'react-datepicker/dist/react-datepicker.css';
 function ContractList() {
   const navigate = useNavigate();
   const [contracts, setContracts] = useState([]);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 10,
+    total: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -28,10 +34,23 @@ function ContractList() {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1) => {
     try {
-      const res = await getContracts();
-      setContracts(res.data.data || res.data || []);
+      setLoading(true);
+      const res = await getContracts({ page });
+      
+      // Handle paginated response
+      if (res.data.data && Array.isArray(res.data.data)) {
+        setContracts(res.data.data);
+        setPagination({
+          current_page: res.data.current_page || 1,
+          last_page: res.data.last_page || 1,
+          per_page: res.data.per_page || 20,
+          total: res.data.total || res.data.data.length
+        });
+      } else {
+        setContracts(res.data || []);
+      }
     } catch (err) {
       console.error(err);
       setError('Không thể tải danh sách hợp đồng');
@@ -43,23 +62,42 @@ function ContractList() {
   const handleExport = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await exportContracts();
       
+      // Create blob with correct MIME type
+      const blob = new Blob([response.data], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
+      
       // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `contracts_${new Date().toISOString().split('T')[0]}.xlsx`);
+      link.setAttribute('download', `hop_dong_${new Date().toISOString().split('T')[0]}.xlsx`);
       document.body.appendChild(link);
       link.click();
+      
+      // Cleanup
       link.remove();
+      window.URL.revokeObjectURL(url);
       
       setSuccess('Xuất file Excel thành công!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      console.error(err);
-      setError('Không thể xuất file Excel');
-      setTimeout(() => setError(null), 3000);
+      console.error('Export error:', err);
+      let errorMsg = 'Không thể xuất file Excel';
+      
+      if (err.response?.status === 401) {
+        errorMsg = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      
+      setError(errorMsg);
+      setTimeout(() => setError(null), 5000);
     } finally {
       setLoading(false);
     }
@@ -71,15 +109,35 @@ function ContractList() {
 
     try {
       setLoading(true);
+      setError(null);
       await importContracts(file);
       setSuccess('Import file Excel thành công!');
       setTimeout(() => setSuccess(null), 3000);
       fetchData(); // Reload data
     } catch (err) {
-      console.error(err);
-      const errorMsg = err.response?.data?.message || 'Không thể import file Excel';
+      console.error('Import error:', err);
+      
+      // Handle different error types
+      let errorMsg = 'Không thể import file Excel';
+      
+      if (err.response?.status === 401) {
+        errorMsg = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
+      } else if (err.response?.data?.errors) {
+        // Validation errors
+        const errors = err.response.data.errors;
+        if (Array.isArray(errors)) {
+          errorMsg = `Lỗi import:\n${errors.map(e => `- Dòng ${e.row}: ${e.errors.join(', ')}`).join('\n')}`;
+        } else {
+          errorMsg = Object.values(errors).flat().join(', ');
+        }
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      
       setError(errorMsg);
-      setTimeout(() => setError(null), 5000);
+      setTimeout(() => setError(null), 10000);
     } finally {
       setLoading(false);
       event.target.value = ''; // Reset file input
@@ -414,8 +472,61 @@ function ContractList() {
         </Table>
       </div>
 
-      <div className="text-muted small mt-2">
-        Hiển thị {filteredContracts.length} / {contracts.length} hợp đồng
+      {/* Pagination */}
+      <div className="d-flex justify-content-between align-items-center mt-3">
+        <div className="text-muted small">
+          Hiển thị {contracts.length} / {pagination.total} hợp đồng
+        </div>
+        
+        {pagination.last_page > 1 && (
+          <nav>
+            <ul className="pagination pagination-sm mb-0">
+              <li className={`page-item ${pagination.current_page === 1 ? 'disabled' : ''}`}>
+                <button 
+                  className="page-link" 
+                  onClick={() => fetchData(pagination.current_page - 1)}
+                  disabled={pagination.current_page === 1}
+                >
+                  &laquo; Trước
+                </button>
+              </li>
+              
+              {[...Array(Math.min(pagination.last_page, 10))].map((_, index) => {
+                let pageNum;
+                if (pagination.last_page <= 10) {
+                  pageNum = index + 1;
+                } else if (pagination.current_page <= 5) {
+                  pageNum = index + 1;
+                } else if (pagination.current_page >= pagination.last_page - 4) {
+                  pageNum = pagination.last_page - 9 + index;
+                } else {
+                  pageNum = pagination.current_page - 5 + index;
+                }
+                
+                return (
+                  <li key={pageNum} className={`page-item ${pagination.current_page === pageNum ? 'active' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => fetchData(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  </li>
+                );
+              })}
+              
+              <li className={`page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}`}>
+                <button 
+                  className="page-link" 
+                  onClick={() => fetchData(pagination.current_page + 1)}
+                  disabled={pagination.current_page === pagination.last_page}
+                >
+                  Sau &raquo;
+                </button>
+              </li>
+            </ul>
+          </nav>
+        )}
       </div>
     </div>
   );
