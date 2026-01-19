@@ -300,14 +300,21 @@ function ContractList() {
         </Row>
       </div>
 
-      {/* Contracts Table */}
-      <div className="table-responsive" style={{ overflowX: 'auto', maxWidth: '100%' }}>
-        <Table striped bordered hover className="align-middle" style={{ minWidth: '3000px' }}>
-          <thead className="table-danger">
+      {/* Contracts Table with Fixed Height Container */}
+      <div style={{ 
+        height: 'calc(100vh - 350px)', 
+        minHeight: '400px',
+        border: '1px solid #dee2e6',
+        borderRadius: '4px',
+        overflow: 'auto',
+        backgroundColor: '#fff'
+      }}>
+        <Table striped bordered hover className="align-middle mb-0" style={{ minWidth: '3000px' }}>
+          <thead className="table-danger" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
             <tr>
-              <th className="text-center" style={{ minWidth: '50px', position: 'sticky', left: 0, backgroundColor: '#f8d7da', zIndex: 10 }}>STT</th>
-              <th style={{ minWidth: '120px', position: 'sticky', left: '50px', backgroundColor: '#f8d7da', zIndex: 10 }}>Phân loại</th>
-              <th style={{ minWidth: '150px', position: 'sticky', left: '170px', backgroundColor: '#f8d7da', zIndex: 10 }}>Số hợp đồng</th>
+              <th className="text-center" style={{ minWidth: '50px', position: 'sticky', left: 0, backgroundColor: '#f8d7da', zIndex: 101 }}>STT</th>
+              <th style={{ minWidth: '120px', position: 'sticky', left: '50px', backgroundColor: '#f8d7da', zIndex: 101 }}>Phân loại</th>
+              <th style={{ minWidth: '150px', position: 'sticky', left: '170px', backgroundColor: '#f8d7da', zIndex: 101 }}>Số hợp đồng</th>
               <th style={{ minWidth: '150px' }}>Ngành nghề</th>
               <th style={{ minWidth: '200px' }}>Tên dự án</th>
               <th style={{ minWidth: '120px' }}>Ngày ký</th>
