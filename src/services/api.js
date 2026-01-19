@@ -41,6 +41,14 @@ export const getContracts = (params) => api.get('/contracts', { params });
 export const createContract = (data) => api.post('/contracts', data);
 export const updateContract = (id, data) => api.put(`/contracts/${id}`, data);
 export const deleteContract = (id) => api.delete(`/contracts/${id}`);
+export const exportContracts = () => api.get('/contracts/export/excel', { responseType: 'blob' });
+export const importContracts = (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/contracts/import/excel', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
 
 // Projects
 export const getProjects = () => api.get('/projects');
