@@ -349,7 +349,7 @@ function ContractList() {
             ) : (
               filteredContracts.map((contract, index) => (
                 <tr key={contract.id}>
-                  <td className="text-center" style={{ position: 'sticky', left: 0, backgroundColor: 'white', zIndex: 9 }}>{index + 1}</td>
+                  <td className="text-center" style={{ position: 'sticky', left: 0, backgroundColor: 'white', zIndex: 9 }}>{contract.id}</td>
                   <td style={{ position: 'sticky', left: '50px', backgroundColor: 'white', zIndex: 9 }}>{contract.classification || '-'}</td>
                   <td style={{ position: 'sticky', left: '170px', backgroundColor: 'white', zIndex: 9 }}>
                     <span className="text-primary fw-bold">{contract.contract_number}</span>
@@ -487,48 +487,153 @@ function ContractList() {
         
         {pagination.last_page > 1 && (
           <nav>
-            <ul className="pagination pagination-sm mb-0">
-              <li className={`page-item ${pagination.current_page === 1 ? 'disabled' : ''}`}>
+            <ul className="pagination pagination-sm mb-0" style={{ gap: '4px' }}>
+              {/* Previous Button */}
+              <li className="page-item">
                 <button 
-                  className="page-link" 
-                  onClick={() => fetchData(pagination.current_page - 1)}
+                  className="page-link border-0 bg-transparent"
+                  onClick={() => pagination.current_page > 1 && fetchData(pagination.current_page - 1)}
                   disabled={pagination.current_page === 1}
+                  style={{ 
+                    color: pagination.current_page === 1 ? '#ccc' : '#666',
+                    cursor: pagination.current_page === 1 ? 'not-allowed' : 'pointer'
+                  }}
                 >
-                  &laquo; Trước
+                  &lt;
                 </button>
               </li>
               
-              {[...Array(Math.min(pagination.last_page, 10))].map((_, index) => {
-                let pageNum;
-                if (pagination.last_page <= 10) {
-                  pageNum = index + 1;
-                } else if (pagination.current_page <= 5) {
-                  pageNum = index + 1;
-                } else if (pagination.current_page >= pagination.last_page - 4) {
-                  pageNum = pagination.last_page - 9 + index;
-                } else {
-                  pageNum = pagination.current_page - 5 + index;
-                }
+              {/* Page Numbers */}
+              {(() => {
+                const pages = [];
+                const current = pagination.current_page;
+                const total = pagination.last_page;
                 
-                return (
-                  <li key={pageNum} className={`page-item ${pagination.current_page === pageNum ? 'active' : ''}`}>
+                // Always show page 1
+                pages.push(
+                  <li key={1} className="page-item">
                     <button 
-                      className="page-link" 
-                      onClick={() => fetchData(pageNum)}
+                      className="page-link"
+                      onClick={() => fetchData(1)}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        backgroundColor: current === 1 ? '#dc3545' : 'transparent',
+                        color: current === 1 ? '#fff' : '#666',
+                        fontWeight: current === 1 ? 'bold' : 'normal',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 0
+                      }}
                     >
-                      {pageNum}
+                      1
                     </button>
                   </li>
                 );
-              })}
+                
+                // Show left ellipsis if current page is far from start
+                if (current > 3) {
+                  pages.push(
+                    <li key="ellipsis-left" className="page-item">
+                      <span className="page-link border-0 bg-transparent" style={{ color: '#666' }}>...</span>
+                    </li>
+                  );
+                }
+                
+                // Show pages around current page
+                let startPage = Math.max(2, current - 1);
+                let endPage = Math.min(total - 1, current + 1);
+                
+                // Adjust if we're near the start
+                if (current <= 3) {
+                  endPage = Math.min(5, total - 1);
+                }
+                
+                // Adjust if we're near the end
+                if (current >= total - 2) {
+                  startPage = Math.max(2, total - 4);
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                  pages.push(
+                    <li key={i} className="page-item">
+                      <button 
+                        className="page-link"
+                        onClick={() => fetchData(i)}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          border: 'none',
+                          backgroundColor: current === i ? '#dc3545' : 'transparent',
+                          color: current === i ? '#fff' : '#666',
+                          fontWeight: current === i ? 'bold' : 'normal',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: 0
+                        }}
+                      >
+                        {i}
+                      </button>
+                    </li>
+                  );
+                }
+                
+                // Show right ellipsis if current page is far from end
+                if (current < total - 2) {
+                  pages.push(
+                    <li key="ellipsis-right" className="page-item">
+                      <span className="page-link border-0 bg-transparent" style={{ color: '#666' }}>...</span>
+                    </li>
+                  );
+                }
+                
+                // Always show last page if there's more than 1 page
+                if (total > 1) {
+                  pages.push(
+                    <li key={total} className="page-item">
+                      <button 
+                        className="page-link"
+                        onClick={() => fetchData(total)}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          border: 'none',
+                          backgroundColor: current === total ? '#dc3545' : 'transparent',
+                          color: current === total ? '#fff' : '#666',
+                          fontWeight: current === total ? 'bold' : 'normal',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: 0
+                        }}
+                      >
+                        {total}
+                      </button>
+                    </li>
+                  );
+                }
+                
+                return pages;
+              })()}
               
-              <li className={`page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}`}>
+              {/* Next Button */}
+              <li className="page-item">
                 <button 
-                  className="page-link" 
-                  onClick={() => fetchData(pagination.current_page + 1)}
+                  className="page-link border-0 bg-transparent"
+                  onClick={() => pagination.current_page < pagination.last_page && fetchData(pagination.current_page + 1)}
                   disabled={pagination.current_page === pagination.last_page}
+                  style={{ 
+                    color: pagination.current_page === pagination.last_page ? '#ccc' : '#666',
+                    cursor: pagination.current_page === pagination.last_page ? 'not-allowed' : 'pointer'
+                  }}
                 >
-                  Sau &raquo;
+                  &gt;
                 </button>
               </li>
             </ul>
