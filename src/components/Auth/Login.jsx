@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';
+import loginBg from '../../assets/vtk2-loginbg.png';
 
 function Login() {
   const navigate = useNavigate();
@@ -31,7 +32,10 @@ function Login() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #E60012 0%, #C00010 100%)',
+      backgroundImage: `url(${loginBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -67,9 +71,7 @@ function Login() {
                   <h4 style={{ color: '#333', fontWeight: '600', marginBottom: '8px' }}>
                     Hệ thống Quản lý Nhân sự
                   </h4>
-                  <p style={{ color: '#666', fontSize: '14px', marginBottom: 0 }}>
-                    Đăng nhập để tiếp tục
-                  </p>
+                  
                 </div>
 
                 {error && (
@@ -133,25 +135,11 @@ function Login() {
                 </Form>
 
                 {/* Demo accounts info */}
-                <div className="mt-4 pt-4" style={{ borderTop: '1px solid #E0E0E0' }}>
-                  <p style={{ fontSize: '12px', color: '#999', marginBottom: '8px', textAlign: 'center' }}>
-                    Tài khoản demo:
-                  </p>
-                  <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.8' }}>
-                    <div><strong>Admin:</strong> admin / admin123</div>
-                    <div><strong>User:</strong> user / user123</div>
-                    <div><strong>HR:</strong> hrmanager / hr123</div>
-                  </div>
-                </div>
+                
               </Card.Body>
             </Card>
 
-            {/* Footer */}
-            <div className="text-center mt-4">
-              <p style={{ color: 'white', fontSize: '13px', opacity: 0.9 }}>
-                © 2026 Viettel VTK. All rights reserved.
-              </p>
-            </div>
+           
           </Col>
         </Row>
       </Container>
