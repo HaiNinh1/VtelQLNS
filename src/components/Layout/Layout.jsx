@@ -152,13 +152,13 @@ function Layout({ children }) {
               >
                 {!collapsed && 'Hợp đồng kinh doanh'}
               </MenuItem>
-              <MenuItem 
+              {/* <MenuItem 
                 active={isActive('/projects')}
                 component={<Link to="/projects" />}
                 icon={<FaProjectDiagram size={18} />}
               >
                 {!collapsed && 'Hợp đồng đối tác'}
-              </MenuItem>
+              </MenuItem> */}
               <MenuItem 
                 active={isActive('/employees')}
                 component={<Link to="/employees" />}
