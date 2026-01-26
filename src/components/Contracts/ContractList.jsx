@@ -349,7 +349,9 @@ function ContractList() {
             ) : (
               filteredContracts.map((contract, index) => (
                 <tr key={contract.id}>
-                  <td className="text-center" style={{ position: 'sticky', left: 0, backgroundColor: 'white', zIndex: 9 }}>{contract.id}</td>
+                  <td className="text-center" style={{ position: 'sticky', left: 0, backgroundColor: 'white', zIndex: 9 }}>
+                    {(pagination.current_page - 1) * pagination.per_page + index + 1}
+                  </td>
                   <td style={{ position: 'sticky', left: '50px', backgroundColor: 'white', zIndex: 9 }}>{contract.classification || '-'}</td>
                   <td style={{ position: 'sticky', left: '170px', backgroundColor: 'white', zIndex: 9 }}>
                     <span className="text-primary fw-bold">{contract.contract_number}</span>
