@@ -171,14 +171,14 @@ function Layout({ children }) {
                 component={<Link to="/certificates" />}
                 icon={<FaCertificate size={18} />}
               >
-                {!collapsed && 'Thiết lập thông báo'}
+                {!collapsed && 'Quản lý Chứng chỉ'}
               </MenuItem>
               <MenuItem 
                 active={isActive('/certificates/search')}
                 component={<Link to="/certificates/search" />}
                 icon={<FaSearch size={18} />}
               >
-                {!collapsed && 'Nhóm'}
+                {!collapsed && 'Tra cứu Chứng chỉ'}
               </MenuItem>
             </Menu>
           </div>

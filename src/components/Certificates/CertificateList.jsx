@@ -1,16 +1,33 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Button, Badge, Modal, Form, Row, Col, Spinner, Alert } from 'react-bootstrap';
-import { FaPlus, FaEdit, FaTrash, FaFileDownload, FaFilter } from 'react-icons/fa';
-import { getCertificates, getCertificatesByEmployee, getCertificatesByType, getExpiringCertificates, getExpiredCertificates, createCertificate, updateCertificate, deleteCertificate, getEmployees, getCertificateTypes } from '../../services/api';
+import { Card, Table, Button, Badge, Collapse, Modal, Form, Row, Col, Spinner, Alert } from 'react-bootstrap';
+import { FaPlus, FaEdit, FaTrash, FaChevronDown, FaChevronUp, FaUser, FaCalendar } from 'react-icons/fa';
+import { getCertificateTypes, getCertificatesByType, createCertificateType, updateCertificateType, deleteCertificateType, createCertificate, updateCertificate, deleteCertificate, getEmployees } from '../../services/api';
 
 function CertificateList() {
-  const [certificates, setCertificates] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [certificateTypes, setCertificateTypes] = useState([]);
+  const [expandedType, setExpandedType] = useState(null);
+  const [certificatesByType, setCertificatesByType] = useState({});
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editingCertificate, setEditingCertificate] = useState(null);
-  const [formData, setFormData] = useState({
+  const [loadingCerts, setLoadingCerts] = useState({});
+  const [error, setError] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  
+  // Modal states
+  const [showTypeModal, setShowTypeModal] = useState(false);
+  const [showCertModal, setShowCertModal] = useState(false);
+  const [editingType, setEditingType] = useState(null);
+  const [editingCert, setEditingCert] = useState(null);
+  const [selectedTypeId, setSelectedTypeId] = useState(null);
+  const [employees, setEmployees] = useState([]);
+  
+  // Form data
+  const [typeFormData, setTypeFormData] = useState({
+    name: '',
+    description: '',
+    validity_period: ''
+  });
+  
+  const [certFormData, setCertFormData] = useState({
     employee_id: '',
     certificate_type_id: '',
     certificate_number: '',
@@ -20,93 +37,55 @@ function CertificateList() {
     file: null,
     notes: ''
   });
-  const [filter, setFilter] = useState('all');
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchData();
-  }, [filter]);
+    fetchCertificateTypes();
+    fetchEmployees();
+  }, []);
 
-  const fetchData = async () => {
+  const fetchCertificateTypes = async () => {
     try {
       setLoading(true);
-      const [certsRes, empsRes, typesRes] = await Promise.all([
-        filter === 'all' ? getCertificates() :
-        filter === 'expiring' ? getExpiringCertificates() :
-        filter === 'expired' ? getExpiredCertificates() :
-        getCertificates({ status: filter }),
-        getEmployees(),
-        getCertificateTypes()
-      ]);
-      
-      setCertificates(Array.isArray(certsRes.data) ? certsRes.data : certsRes.data.data || []);
-      setEmployees(Array.isArray(empsRes.data) ? empsRes.data : empsRes.data.data || []);
-      setCertificateTypes(Array.isArray(typesRes.data) ? typesRes.data : typesRes.data.data || []);
+      const response = await getCertificateTypes();
+      setCertificateTypes(Array.isArray(response.data) ? response.data : response.data.data || []);
     } catch (err) {
-      setError('Không thể tải dữ liệu: ' + err.message);
+      setError('Không thể tải danh sách loại chứng chỉ: ' + err.message);
       console.error('Fetch error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleShowModal = (certificate = null) => {
-    if (certificate) {
-      setEditingCertificate(certificate);
-      setFormData({
-        employee_id: certificate.employee_id,
-        certificate_type_id: certificate.certificate_type_id,
-        certificate_number: certificate.certificate_number,
-        issued_by: certificate.issued_by || '',
-        issued_date: certificate.issued_date,
-        expiry_date: certificate.expiry_date || '',
-        file: null,
-        notes: certificate.notes || ''
-      });
-    } else {
-      setEditingCertificate(null);
-      setFormData({
-        employee_id: '',
-        certificate_type_id: '',
-        certificate_number: '',
-        issued_by: '',
-        issued_date: '',
-        expiry_date: '',
-        file: null,
-        notes: ''
-      });
-    }
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setEditingCertificate(null);
-    setError('');
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const fetchEmployees = async () => {
     try {
-      if (editingCertificate) {
-        await updateCertificate(editingCertificate.id, formData);
-      } else {
-        await createCertificate(formData);
-      }
-      handleCloseModal();
-      fetchData();
+      const response = await getEmployees();
+      setEmployees(Array.isArray(response.data) ? response.data : response.data.data || []);
     } catch (err) {
-      setError('Lỗi khi lưu chứng chỉ: ' + (err.response?.data?.message || err.message));
+      console.error('Error fetching employees:', err);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa chứng chỉ này?')) {
-      try {
-        await deleteCertificate(id);
-        fetchData();
-      } catch (err) {
-        setError('Lỗi khi xóa chứng chỉ: ' + err.message);
+  const fetchCertificatesByTypeId = async (typeId) => {
+    try {
+      setLoadingCerts(prev => ({ ...prev, [typeId]: true }));
+      const response = await getCertificatesByType(typeId);
+      const certs = Array.isArray(response.data) ? response.data : response.data.data || [];
+      setCertificatesByType(prev => ({ ...prev, [typeId]: certs }));
+    } catch (err) {
+      setError('Không thể tải danh sách chứng chỉ: ' + err.message);
+      console.error('Fetch certificates error:', err);
+    } finally {
+      setLoadingCerts(prev => ({ ...prev, [typeId]: false }));
+    }
+  };
+
+  const handleTypeClick = async (typeId) => {
+    if (expandedType === typeId) {
+      setExpandedType(null);
+    } else {
+      setExpandedType(typeId);
+      if (!certificatesByType[typeId]) {
+        await fetchCertificatesByTypeId(typeId);
       }
     }
   };
@@ -118,6 +97,124 @@ function CertificateList() {
       'Hết hạn': 'danger'
     };
     return <Badge bg={badges[status] || 'secondary'}>{status}</Badge>;
+  };
+
+  const getFilteredCertificates = (certificates) => {
+    if (!certificates) return [];
+    if (statusFilter === 'all') return certificates;
+    return certificates.filter(cert => {
+      if (statusFilter === 'expiring') return cert.status === 'Sắp hết hạn';
+      return cert.status === statusFilter;
+    });
+  };
+
+  const getCertificateStats = (typeId) => {
+    const certs = certificatesByType[typeId] || [];
+    return {
+      total: certs.length,
+      valid: certs.filter(c => c.status === 'Còn hạn').length,
+      expiring: certs.filter(c => c.status === 'Sắp hết hạn').length,
+      expired: certs.filter(c => c.status === 'Hết hạn').length
+    };
+  };
+
+  // Certificate Type CRUD
+  const handleShowTypeModal = (type = null) => {
+    if (type) {
+      setEditingType(type);
+      setTypeFormData({
+        name: type.name,
+        description: type.description || '',
+        validity_period: type.validity_period || ''
+      });
+    } else {
+      setEditingType(null);
+      setTypeFormData({ name: '', description: '', validity_period: '' });
+    }
+    setShowTypeModal(true);
+  };
+
+  const handleTypeSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingType) {
+        await updateCertificateType(editingType.id, typeFormData);
+      } else {
+        await createCertificateType(typeFormData);
+      }
+      setShowTypeModal(false);
+      fetchCertificateTypes();
+    } catch (err) {
+      setError('Lỗi khi lưu loại chứng chỉ: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleDeleteType = async (id) => {
+    if (window.confirm('Bạn có chắc muốn xóa loại chứng chỉ này?')) {
+      try {
+        await deleteCertificateType(id);
+        fetchCertificateTypes();
+      } catch (err) {
+        setError('Lỗi khi xóa loại chứng chỉ: ' + err.message);
+      }
+    }
+  };
+
+  // Certificate CRUD
+  const handleShowCertModal = (typeId, cert = null) => {
+    setSelectedTypeId(typeId);
+    if (cert) {
+      setEditingCert(cert);
+      setCertFormData({
+        employee_id: cert.employee_id,
+        certificate_type_id: cert.certificate_type_id,
+        certificate_number: cert.certificate_number,
+        issued_by: cert.issued_by || '',
+        issued_date: cert.issued_date,
+        expiry_date: cert.expiry_date || '',
+        file: null,
+        notes: cert.notes || ''
+      });
+    } else {
+      setEditingCert(null);
+      setCertFormData({
+        employee_id: '',
+        certificate_type_id: typeId,
+        certificate_number: '',
+        issued_by: '',
+        issued_date: '',
+        expiry_date: '',
+        file: null,
+        notes: ''
+      });
+    }
+    setShowCertModal(true);
+  };
+
+  const handleCertSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingCert) {
+        await updateCertificate(editingCert.id, certFormData);
+      } else {
+        await createCertificate(certFormData);
+      }
+      setShowCertModal(false);
+      await fetchCertificatesByTypeId(selectedTypeId);
+    } catch (err) {
+      setError('Lỗi khi lưu chứng chỉ: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleDeleteCert = async (certId, typeId) => {
+    if (window.confirm('Bạn có chắc muốn xóa chứng chỉ này?')) {
+      try {
+        await deleteCertificate(certId);
+        await fetchCertificatesByTypeId(typeId);
+      } catch (err) {
+        setError('Lỗi khi xóa chứng chỉ: ' + err.message);
+      }
+    }
   };
 
   if (loading) {
@@ -133,109 +230,274 @@ function CertificateList() {
       <Card>
         <Card.Header className="d-flex justify-content-between align-items-center">
           <h5 className="mb-0">Quản lý Chứng chỉ</h5>
-          <Button variant="danger" size="sm" onClick={() => handleShowModal()}>
-            <FaPlus className="me-1" /> Thêm Chứng chỉ
+          <Button variant="danger" size="sm" onClick={() => handleShowTypeModal()}>
+            <FaPlus className="me-1" /> Thêm Loại Chứng chỉ
           </Button>
         </Card.Header>
         <Card.Body>
           {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
           
-          {/* Filter Buttons */}
+          {/* Status Filter */}
           <div className="mb-3">
             <Button 
-              variant={filter === 'all' ? 'danger' : 'outline-secondary'} 
+              variant={statusFilter === 'all' ? 'danger' : 'outline-secondary'} 
               size="sm" 
               className="me-2"
-              onClick={() => setFilter('all')}
+              onClick={() => setStatusFilter('all')}
             >
               Tất cả
             </Button>
             <Button 
-              variant={filter === 'Còn hạn' ? 'success' : 'outline-success'} 
+              variant={statusFilter === 'Còn hạn' ? 'success' : 'outline-success'} 
               size="sm" 
               className="me-2"
-              onClick={() => setFilter('Còn hạn')}
+              onClick={() => setStatusFilter('Còn hạn')}
             >
               Còn hạn
             </Button>
             <Button 
-              variant={filter === 'expiring' ? 'warning' : 'outline-warning'} 
+              variant={statusFilter === 'expiring' ? 'warning' : 'outline-warning'} 
               size="sm" 
               className="me-2"
-              onClick={() => setFilter('expiring')}
+              onClick={() => setStatusFilter('expiring')}
             >
               Sắp hết hạn
             </Button>
             <Button 
-              variant={filter === 'expired' ? 'danger' : 'outline-danger'} 
+              variant={statusFilter === 'Hết hạn' ? 'danger' : 'outline-danger'} 
               size="sm"
-              onClick={() => setFilter('expired')}
+              onClick={() => setStatusFilter('Hết hạn')}
             >
               Hết hạn
             </Button>
           </div>
 
+          {/* Certificate Types Table */}
           <Table striped bordered hover responsive>
             <thead className="table-light">
               <tr>
-                <th>STT</th>
-                <th>Mã chứng chỉ</th>
-                <th>Loại chứng chỉ</th>
-                <th>Nhân viên</th>
-                <th>Phòng ban</th>
-                <th>Ngày cấp</th>
-                <th>Ngày hết hạn</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
+                <th style={{ width: '50px' }}>STT</th>
+                <th>Loại Chứng chỉ</th>
+                <th>Mô tả</th>
+                <th style={{ width: '120px' }}>Thời hạn</th>
+                <th style={{ width: '300px' }}>Thống kê</th>
+                <th style={{ width: '150px' }}>Thao tác</th>
               </tr>
             </thead>
             <tbody>
-              {certificates.length === 0 ? (
+              {certificateTypes.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="text-center">Không có dữ liệu</td>
+                  <td colSpan="6" className="text-center">Chưa có loại chứng chỉ nào</td>
                 </tr>
               ) : (
-                certificates.map((cert, index) => (
-                  <tr key={cert.id}>
-                    <td>{index + 1}</td>
-                    <td>{cert.certificate_number}</td>
-                    <td>{cert.certificate_type?.name}</td>
-                    <td>{cert.employee?.full_name}</td>
-                    <td>{cert.employee?.department?.name}</td>
-                    <td>{new Date(cert.issued_date).toLocaleDateString('vi-VN')}</td>
-                    <td>{cert.expiry_date ? new Date(cert.expiry_date).toLocaleDateString('vi-VN') : '-'}</td>
-                    <td>{getStatusBadge(cert.status)}</td>
-                    <td>
-                      <Button 
-                        variant="outline-primary" 
-                        size="sm" 
-                        className="me-1"
-                        onClick={() => handleShowModal(cert)}
+                certificateTypes.map((type, index) => {
+                  const stats = getCertificateStats(type.id);
+                  const isExpanded = expandedType === type.id;
+                  const filteredCerts = getFilteredCertificates(certificatesByType[type.id]);
+
+                  return (
+                    <>
+                      <tr 
+                        key={type.id}
+                        style={{ 
+                          cursor: 'pointer',
+                          backgroundColor: isExpanded ? '#fff5f5' : 'transparent'
+                        }}
                       >
-                        <FaEdit />
-                      </Button>
-                      <Button 
-                        variant="outline-danger" 
-                        size="sm"
-                        onClick={() => handleDelete(cert.id)}
-                      >
-                        <FaTrash />
-                      </Button>
-                    </td>
-                  </tr>
-                ))
+                        <td onClick={() => handleTypeClick(type.id)}>{index + 1}</td>
+                        <td onClick={() => handleTypeClick(type.id)}>
+                          <strong style={{ color: 'var(--viettel-red)' }}>
+                            {isExpanded ? <FaChevronUp className="me-2" /> : <FaChevronDown className="me-2" />}
+                            {type.name}
+                          </strong>
+                        </td>
+                        <td onClick={() => handleTypeClick(type.id)}>
+                          <small className="text-muted">{type.description || '-'}</small>
+                        </td>
+                        <td onClick={() => handleTypeClick(type.id)}>
+                          {type.validity_period ? `${type.validity_period} tháng` : '-'}
+                        </td>
+                        <td onClick={() => handleTypeClick(type.id)}>
+                          <div className="d-flex gap-2 flex-wrap">
+                            <Badge bg="primary">{stats.total} tổng</Badge>
+                            <Badge bg="success">{stats.valid} còn hạn</Badge>
+                            <Badge bg="warning">{stats.expiring} sắp hết</Badge>
+                            <Badge bg="danger">{stats.expired} hết hạn</Badge>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="d-flex gap-1">
+                            <Button 
+                              variant="outline-primary" 
+                              size="sm"
+                              onClick={() => handleShowCertModal(type.id)}
+                              title="Thêm chứng chỉ"
+                            >
+                              <FaPlus />
+                            </Button>
+                            <Button 
+                              variant="outline-secondary" 
+                              size="sm"
+                              onClick={() => handleShowTypeModal(type)}
+                              title="Sửa loại chứng chỉ"
+                            >
+                              <FaEdit />
+                            </Button>
+                            <Button 
+                              variant="outline-danger" 
+                              size="sm"
+                              onClick={() => handleDeleteType(type.id)}
+                              title="Xóa loại chứng chỉ"
+                            >
+                              <FaTrash />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                      
+                      {/* Expanded Row - Employee Certificates */}
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan="6" style={{ padding: 0, backgroundColor: '#f8f9fa' }}>
+                            <Collapse in={isExpanded}>
+                              <div style={{ padding: '15px' }}>
+                                {loadingCerts[type.id] ? (
+                                  <div className="text-center py-3">
+                                    <Spinner animation="border" size="sm" variant="danger" />
+                                  </div>
+                                ) : filteredCerts.length === 0 ? (
+                                  <Alert variant="info" className="mb-0">
+                                    {statusFilter === 'all' 
+                                      ? 'Chưa có nhân viên nào có chứng chỉ này' 
+                                      : `Không có chứng chỉ ${statusFilter === 'expiring' ? 'sắp hết hạn' : statusFilter.toLowerCase()}`}
+                                  </Alert>
+                                ) : (
+                                  <Table size="sm" bordered hover className="mb-0">
+                                    <thead style={{ backgroundColor: '#fff' }}>
+                                      <tr>
+                                        <th style={{ width: '50px' }}>STT</th>
+                                        <th>Nhân viên</th>
+                                        <th>Phòng ban</th>
+                                        <th>Số chứng chỉ</th>
+                                        <th>Nơi cấp</th>
+                                        <th>Ngày cấp</th>
+                                        <th>Ngày hết hạn</th>
+                                        <th>Trạng thái</th>
+                                        <th style={{ width: '100px' }}>Thao tác</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {filteredCerts.map((cert, idx) => (
+                                        <tr key={cert.id}>
+                                          <td>{idx + 1}</td>
+                                          <td>
+                                            <FaUser className="me-1" style={{ fontSize: '12px', color: '#666' }} />
+                                            {cert.employee?.full_name}
+                                          </td>
+                                          <td>{cert.employee?.department?.name || '-'}</td>
+                                          <td>{cert.certificate_number}</td>
+                                          <td>{cert.issued_by || '-'}</td>
+                                          <td>
+                                            <FaCalendar className="me-1" style={{ fontSize: '11px', color: '#666' }} />
+                                            {new Date(cert.issued_date).toLocaleDateString('vi-VN')}
+                                          </td>
+                                          <td>
+                                            {cert.expiry_date ? (
+                                              <>
+                                                <FaCalendar className="me-1" style={{ fontSize: '11px', color: '#666' }} />
+                                                {new Date(cert.expiry_date).toLocaleDateString('vi-VN')}
+                                              </>
+                                            ) : '-'}
+                                          </td>
+                                          <td>{getStatusBadge(cert.status)}</td>
+                                          <td>
+                                            <div className="d-flex gap-1">
+                                              <Button 
+                                                variant="outline-primary" 
+                                                size="sm"
+                                                onClick={() => handleShowCertModal(type.id, cert)}
+                                              >
+                                                <FaEdit />
+                                              </Button>
+                                              <Button 
+                                                variant="outline-danger" 
+                                                size="sm"
+                                                onClick={() => handleDeleteCert(cert.id, type.id)}
+                                              >
+                                                <FaTrash />
+                                              </Button>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </Table>
+                                )}
+                              </div>
+                            </Collapse>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })
               )}
             </tbody>
           </Table>
         </Card.Body>
       </Card>
 
-      {/* Modal Add/Edit */}
-      <Modal show={showModal} onHide={handleCloseModal} size="lg">
+      {/* Certificate Type Modal */}
+      <Modal show={showTypeModal} onHide={() => setShowTypeModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editingCertificate ? 'Sửa Chứng chỉ' : 'Thêm Chứng chỉ'}</Modal.Title>
+          <Modal.Title>{editingType ? 'Sửa Loại Chứng chỉ' : 'Thêm Loại Chứng chỉ'}</Modal.Title>
         </Modal.Header>
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleTypeSubmit}>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Tên loại chứng chỉ <span className="text-danger">*</span></Form.Label>
+              <Form.Control
+                type="text"
+                required
+                value={typeFormData.name}
+                onChange={(e) => setTypeFormData({...typeFormData, name: e.target.value})}
+                placeholder="Ví dụ: PMP, AWS, CCNA..."
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Mô tả</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                value={typeFormData.description}
+                onChange={(e) => setTypeFormData({...typeFormData, description: e.target.value})}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Thời hạn (tháng)</Form.Label>
+              <Form.Control
+                type="number"
+                value={typeFormData.validity_period}
+                onChange={(e) => setTypeFormData({...typeFormData, validity_period: e.target.value})}
+                placeholder="Ví dụ: 24, 36..."
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowTypeModal(false)}>Hủy</Button>
+            <Button variant="danger" type="submit">
+              {editingType ? 'Cập nhật' : 'Thêm mới'}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
+      {/* Certificate Modal */}
+      <Modal show={showCertModal} onHide={() => setShowCertModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>{editingCert ? 'Sửa Chứng chỉ' : 'Thêm Chứng chỉ'}</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleCertSubmit}>
           <Modal.Body>
             <Row>
               <Col md={6}>
@@ -243,8 +505,8 @@ function CertificateList() {
                   <Form.Label>Nhân viên <span className="text-danger">*</span></Form.Label>
                   <Form.Select
                     required
-                    value={formData.employee_id}
-                    onChange={(e) => setFormData({...formData, employee_id: e.target.value})}
+                    value={certFormData.employee_id}
+                    onChange={(e) => setCertFormData({...certFormData, employee_id: e.target.value})}
                   >
                     <option value="">Chọn nhân viên</option>
                     {employees.map(emp => (
@@ -257,97 +519,75 @@ function CertificateList() {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Loại chứng chỉ <span className="text-danger">*</span></Form.Label>
-                  <Form.Select
-                    required
-                    value={formData.certificate_type_id}
-                    onChange={(e) => setFormData({...formData, certificate_type_id: e.target.value})}
-                  >
-                    <option value="">Chọn loại chứng chỉ</option>
-                    {certificateTypes.map(type => (
-                      <option key={type.id} value={type.id}>{type.name}</option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
                   <Form.Label>Mã chứng chỉ <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     type="text"
                     required
-                    value={formData.certificate_number}
-                    onChange={(e) => setFormData({...formData, certificate_number: e.target.value})}
+                    value={certFormData.certificate_number}
+                    onChange={(e) => setCertFormData({...certFormData, certificate_number: e.target.value})}
                   />
                 </Form.Group>
               </Col>
+            </Row>
+            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Nơi cấp</Form.Label>
                   <Form.Control
                     type="text"
-                    value={formData.issued_by}
-                    onChange={(e) => setFormData({...formData, issued_by: e.target.value})}
+                    value={certFormData.issued_by}
+                    onChange={(e) => setCertFormData({...certFormData, issued_by: e.target.value})}
                   />
                 </Form.Group>
               </Col>
-            </Row>
-
-            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Ngày cấp <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     type="date"
                     required
-                    value={formData.issued_date}
-                    onChange={(e) => setFormData({...formData, issued_date: e.target.value})}
+                    value={certFormData.issued_date}
+                    onChange={(e) => setCertFormData({...certFormData, issued_date: e.target.value})}
                   />
                 </Form.Group>
               </Col>
+            </Row>
+            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Ngày hết hạn</Form.Label>
                   <Form.Control
                     type="date"
-                    value={formData.expiry_date}
-                    onChange={(e) => setFormData({...formData, expiry_date: e.target.value})}
+                    value={certFormData.expiry_date}
+                    onChange={(e) => setCertFormData({...certFormData, expiry_date: e.target.value})}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>File chứng chỉ</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setCertFormData({...certFormData, file: e.target.files[0]})}
                   />
                 </Form.Group>
               </Col>
             </Row>
-
-            <Form.Group className="mb-3">
-              <Form.Label>File chứng chỉ</Form.Label>
-              <Form.Control
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => setFormData({...formData, file: e.target.files[0]})}
-              />
-              <Form.Text className="text-muted">
-                Chấp nhận: PDF, JPG, PNG (Max: 5MB)
-              </Form.Text>
-            </Form.Group>
-
             <Form.Group className="mb-3">
               <Form.Label>Ghi chú</Form.Label>
               <Form.Control
                 as="textarea"
-                rows={3}
-                value={formData.notes}
-                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                rows={2}
+                value={certFormData.notes}
+                onChange={(e) => setCertFormData({...certFormData, notes: e.target.value})}
               />
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseModal}>
-              Hủy
-            </Button>
+            <Button variant="secondary" onClick={() => setShowCertModal(false)}>Hủy</Button>
             <Button variant="danger" type="submit">
-              {editingCertificate ? 'Cập nhật' : 'Thêm mới'}
+              {editingCert ? 'Cập nhật' : 'Thêm mới'}
             </Button>
           </Modal.Footer>
         </Form>
