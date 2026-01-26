@@ -375,3 +375,28 @@ code {
   transform: translateY(-50%);
   color: #999;
 }
+
+/* React Pro Sidebar Custom Styles */
+.pro-sidebar {
+  transition: width 0.3s ease-in-out !important;
+}
+
+.pro-sidebar .pro-menu-item {
+  transition: all 0.3s ease;
+}
+
+.pro-sidebar .pro-inner-item {
+  padding: 8px 20px !important;
+}
+
+.pro-sidebar .pro-icon-wrapper {
+  background-color: transparent !important;
+  margin-right: 10px;
+}
+
+.pro-sidebar .pro-item-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
