@@ -164,7 +164,7 @@ function Layout({ children }) {
                 component={<Link to="/employees" />}
                 icon={<FaUsers size={18} />}
               >
-                {!collapsed && 'Chủ đầu tư/đối tác'}
+                {!collapsed && 'Danh sách nhân sự'}
               </MenuItem>
               <MenuItem 
                 active={isActive('/certificates')}

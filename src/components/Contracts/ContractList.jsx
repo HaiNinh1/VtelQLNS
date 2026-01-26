@@ -354,7 +354,13 @@ function ContractList() {
                   </td>
                   <td style={{ position: 'sticky', left: '50px', backgroundColor: 'white', zIndex: 9 }}>{contract.classification || '-'}</td>
                   <td style={{ position: 'sticky', left: '170px', backgroundColor: 'white', zIndex: 9 }}>
-                    <span className="text-primary fw-bold">{contract.contract_number}</span>
+                    <span 
+                      className="text-primary fw-bold" 
+                      style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                      onClick={() => navigate(`/contracts/${contract.id}`)}
+                    >
+                      {contract.contract_number}
+                    </span>
                   </td>
                   <td>{contract.industry || '-'}</td>
                   <td>{contract.project_name || '-'}</td>

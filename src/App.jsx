@@ -7,6 +7,7 @@ import Layout from './components/Layout/Layout';
 import EmployeeList from './components/Employees/EmployeeList';
 import EmployeeDetail from './components/Employees/EmployeeDetail';
 import ContractList from './components/Contracts/ContractList';
+import ContractDetail from './components/Contracts/ContractDetail';
 import ProjectList from './components/Projects/ProjectList';
 import CertificateList from './components/Certificates/CertificateList';
 import CertificateSearch from './components/Certificates/CertificateSearch';
@@ -44,6 +45,12 @@ function App() {
           <Route path="/contracts" element={
             <PrivateRoute>
               <Layout><ContractList /></Layout>
+            </PrivateRoute>
+          } />
+          
+          <Route path="/contracts/:id" element={
+            <PrivateRoute>
+              <Layout><ContractDetail /></Layout>
             </PrivateRoute>
           } />
           
